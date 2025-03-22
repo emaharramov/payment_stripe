@@ -17,25 +17,25 @@ module.exports = async (req, res) => {
   const { amount, currency } = req.body;
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: currency || "usd",
-            product_data: {
-              name: "Mobil Uygulama Satışı",
-            },
-            unit_amount: amount,
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price_data: {
+          currency: currency || "usd",
+          product_data: {
+            name: "Mobil Uygulama Satışı",
           },
-          quantity: 1,
+          unit_amount: amount,
         },
-      ],
-      mode: "payment",
-      success_url: "myapp://success",
-      cancel_url: "myapp://cancel",
-    });
-
+        quantity: 1,
+      },
+    ],
+    mode: "payment",
+    success_url: "https://google.com",
+    cancel_url: "https://google.com", 
+  });
+  
     res.status(200).json({ url: session.url });
   } catch (error) {
     res.status(500).json({ error: error.message });

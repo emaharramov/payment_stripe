@@ -14,29 +14,31 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { amount, currency } = req.body;
-
   try {
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        price_data: {
-          currency: currency || "usd",
-          product_data: {
-            name: "Mobil Uygulama Satışı",
-          },
-          unit_amount: amount,
-        },
-        quantity: 1,
+    const customer = await stripe.customers.create();
+
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      { customer: customer.id },
+      { apiVersion: "2025-02-24.acacia" }
+    );
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 1099,
+      currency: "eur",
+      customer: customer.id,
+      automatic_payment_methods: {
+        enabled: true,
       },
-    ],
-    mode: "payment",
-    success_url: "https://google.com",
-    cancel_url: "https://google.com", 
-  });
-  
-    res.status(200).json({ url: session.url });
+    });
+
+    res.status(200).json({
+      paymentIntent: paymentIntent.client_secret,
+      ephemeralKey: ephemeralKey.secret,
+      customer: customer.id,
+      publishableKey:
+        process.env.STRIPE_PUBLISHABLE_KEY ||
+        "pk_test_51R5V6PG11QrLIB0FhFkWvnnGiabNsVZ5dYvmgW8IBIx66RwvLmRJPXPD7OwxLSzsU6mmLcDBQXtIFI7L903KlBss00bksGO4PN",
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
